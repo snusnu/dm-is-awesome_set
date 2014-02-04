@@ -2,3 +2,5 @@ pkg/*
 .bundle
 *.gem
 Gemfile.lock
+nbproject
+doc

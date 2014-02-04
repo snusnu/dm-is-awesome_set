@@ -1,0 +1,73 @@
+This is a DataMapper plugin that provides a Nested set (http://en.wikipedia.org/wiki/Nested_set_model) for sorted hierarchical data.
+
+== Setup
+Awesome set will be automatically available for DataMapper resources when you require 'dm-is-awesome_set' in your application.
+To declare a model to be a nested set add the following to the class:
+
+  class Foo
+    include DataMapper::Resource
+    is :nested_set
+  end
+
+This will cause the creation of three properties (_parent_id_, _lft_ and _rgt_) and
+will add some methods to your model:
+
+  Foo.roots # returning all root nodes
+  Foo.leaves # returning all leaf nodes
+
+Furthermore it adds some instance methods:
+
+  # Query
+  node.root # gets the root of this node
+  node.ancestors # gets all nodes on the path to the root (using a single query!)
+  node.siblings # get all siblings
+  node.descendants # gets all nodes below this node (using a single query!)
+  node.leaves # gets all leaves below this node
+
+  # Manipulation
+  node.move(...) # for manipulating the tree
+
+== Manipulating
+The tree may only be manipulated by using the _move_ method mentioned above.
+
+Usage:
+
+  node.move :higher           # moves node higher unless it is at the top of parent
+  node.move :lower            # moves node lower unless it is at the bottom of parent
+  node.move :below => other   # moves this node below other resource in the set
+  node.move :into => other    # same as setting a parent-relationship
+
+Here is a complete list of all possible actions:
+* <tt>:higher</tt>: move node higher
+* <tt>:highest</tt>: move node to the top of the list (within its parent)
+* <tt>:lower</tt>: move node lower
+* <tt>:lowest</tt>: move node to the bottom of the list (within its parent)
+* <tt>:indent</tt>: move node into sibling above
+* <tt>:outdent</tt>: move node out below its current parent
+* <tt>:root</tt>: move node to root of the currently set scope
+* <tt>:root => <Hash></tt>: move node to the root of the given scope
+* <tt>:root => <Resource></tt>: move node to root of the other nodes scope
+* <tt>:into => <Resource></tt>: move node into another node
+* <tt>:above => <Resource></tt>: move node above other node
+* <tt>:below => <Resource></tt>: move node below other node
+* <tt>:to => <Integer></tt>: move node to a specific location in the nested set
+
+*Attention*: The _move_ method uses 'dm-adjust' to do some batch updates in the
+background. You'll have to reload all affected objects (which probably will be a
+lot) after using _move_.
+
+== Scopes
+You can specify scopes for using multiple trees (forests):
+
+  class Foo
+    include DataMapper::Resource
+    belongs_to :category
+    is :nested_set, :scope => [:category_id]
+  end
+
+This version enables scoping that can either include or ignore discriminators.
+If you wish to scope by a discriminator, please include that column name in
+the scope option. Otherwise this plugin will work with all rows regardless of
+the discriminator column.
+
+
