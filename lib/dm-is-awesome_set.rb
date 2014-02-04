@@ -33,15 +33,16 @@ module DataMapper
         opts = set_options(options)
         [:child_key, :scope].each {|var| raise "#{var} must be an Array" unless opts[var].is_a?(Array)}
 
-        property :parent_id, Integer, :min => 0, :writer => :protected
+        opts[:child_key].each do |child_key|
+          property child_key, Integer, :min => 0, :writer => :protected
+        end
 
         property :lft, Integer, :writer => :private, :index => true
         property :rgt, Integer, :writer => :private, :index => true
 
         class_opts = {:model => self.name, :child_key => opts[:child_key], :order => [:lft.asc] }
 
-        belongs_to :parent,   class_opts.merge(:required => false)
-        protected  :parent=
+        belongs_to :parent,   class_opts.merge(:required => false, :writer_visibility => :protected)
         has n,     :children, class_opts
 
         before :save do
@@ -291,7 +292,7 @@ module DataMapper
           sad
         end
 
-      protected
+        protected
         def skip_adjust=(var) #:nodoc:
           @skip_adjust = true
         end

@@ -423,6 +423,32 @@ describe DataMapper::Is::AwesomeSet do
       c1 = Category.create(scope)
       c2 = Category.create(scope)
       lambda {c2.parent = c1}.should raise_error(NoMethodError)
+      lambda {c2.parent_id = c1.id}.should raise_error(NoMethodError)
+    end
+
+    it "should allow choosing a differenct child key" do
+      class SomeLegacyModel
+        include DataMapper::Resource
+
+        property :id1,       Integer, :key => true
+        property :id2,       Integer, :key => true
+
+        is :awesome_set, :child_key => [:parent_id1, :parent_id2]
+      end
+      
+      SomeLegacyModel.auto_migrate!
+      SomeLegacyModel.properties[:parent_id1].should_not be_nil
+      SomeLegacyModel.properties[:parent_id].should be_nil
+
+      root = SomeLegacyModel.create(:id1 => 1, :id2 => 2)
+      item = SomeLegacyModel.create(:id1 => 3, :id2 => 4)
+      
+      item.move(:into => root)
+      [item, root].each(&:reload)
+      item.parent_id1.should eql(1)
+      item.parent_id2.should eql(2)
+      [root.lft, root.rgt].should eql([1,4])
+      [item.lft, item.rgt].should eql([2,3])
     end
 
   end
