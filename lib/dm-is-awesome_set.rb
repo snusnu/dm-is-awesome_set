@@ -83,7 +83,7 @@ module DataMapper
           send_to_obj = hash.is_a?(self)
 
           scope_keys.each do |sk|
-            if send_to_obj && self.public_method_defined?(name = sk)
+            if send_to_obj && self.public_method_defined?(sk)
               ret[sk] = hash.__send__(sk)
             else
               ret[sk] = hash[sk]
