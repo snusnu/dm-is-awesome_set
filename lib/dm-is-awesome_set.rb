@@ -1,7 +1,6 @@
 require 'dm-core'
 require 'dm-adjust'
 require 'dm-aggregates'
-require 'dm-transactions'
 
 module DataMapper
   module Is
@@ -167,10 +166,8 @@ module DataMapper
         # @see move_without_saving
 
         def move(vector)
-          get_class.transaction do
-            move_without_saving(vector)
-            save!
-          end
+          move_without_saving(vector)
+          save!
           reload
         end
 
@@ -273,10 +270,8 @@ module DataMapper
           # Trigger all the before :destroy methods
           sads.each { |sad| before_methods.each { |bf| sad.send(bf) } }
           # dup is called here because destroy! likes to clear out the array, understandably.
-          get_class.transaction do
-            sads.dup.destroy!
-            adjust_gap!(full_set, lft, -(rgt - lft + 1))
-          end
+          sads.dup.destroy!
+          adjust_gap!(full_set, lft, -(rgt - lft + 1))
           # Now go through after all the after :destroy methods.
           sads.each { |sad| after_methods.each { |bf| sad.send(bf) } }
         end
@@ -284,10 +279,8 @@ module DataMapper
         # Same as @destroy, but does not run the hooks
         def destroy!
           sad = self_and_descendants
-          get_class.transaction do
-            sad.dup.destroy!
-            adjust_gap!(full_set, lft, -(rgt - lft + 1))
-          end
+          sad.dup.destroy!
+          adjust_gap!(full_set, lft, -(rgt - lft + 1))
           sad
         end
 
